@@ -347,7 +347,6 @@ elif option == "Image Link":
                 </div>
             """, unsafe_allow_html=True)
 
-# Live Camera Option with streamlit-webrtc
 elif option == "Live Camera":
     st.markdown("""
         <div class="glass-card">
@@ -358,8 +357,9 @@ elif option == "Live Camera":
     
     class VideoProcessor(VideoProcessorBase):
         def __init__(self):
-            self.model = YOLO("best.pt")
             self.confidence_threshold = confidence_threshold
+            # Use the globally loaded model
+            self.model = model
 
         def recv(self, frame):
             try:
@@ -368,10 +368,11 @@ elif option == "Live Camera":
                 # Convert BGR to RGB
                 img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 
-                # Run YOLO prediction
-                results = self.model.predict(
+                # Run YOLO prediction with task parameter
+                results = self.model(
                     source=img_rgb,
                     conf=self.confidence_threshold,
+                    task='segment',  # Specify the task
                     show_boxes=False
                 )
                 
@@ -379,21 +380,17 @@ elif option == "Live Camera":
                 for result in results:
                     annotated_frame = result.plot()
                 
-                # Convert back to BGR for display
-                annotated_frame_bgr = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
-                
-                return av.VideoFrame.from_ndarray(annotated_frame_bgr, format="bgr24")
+                return av.VideoFrame.from_ndarray(annotated_frame, format="rgb24")
             
             except Exception as e:
-                st.error(f"Error processing frame: {str(e)}")
+                print(f"Frame processing error: {str(e)}")
                 return frame
 
     # WebRTC configuration
     rtc_config = RTCConfiguration(
         {"iceServers": [
             {"urls": ["stun:stun.l.google.com:19302"]},
-            {"urls": ["stun:stun1.l.google.com:19302"]},
-            {"urls": ["stun:stun2.l.google.com:19302"]}
+            {"urls": ["stun:stun1.l.google.com:19302"]}
         ]}
     )
 
@@ -407,7 +404,11 @@ elif option == "Live Camera":
                 video_processor_factory=VideoProcessor,
                 rtc_configuration=rtc_config,
                 media_stream_constraints={
-                    "video": {"width": 640, "height": 480},
+                    "video": {
+                        "width": {"ideal": 640},
+                        "height": {"ideal": 480},
+                        "frameRate": {"ideal": 15}
+                    },
                     "audio": False
                 },
                 async_processing=True
@@ -427,7 +428,7 @@ elif option == "Live Camera":
                 """, unsafe_allow_html=True)
 
         except Exception as e:
-            st.error(f"Error initializing camera: {str(e)}")
+            st.error(f"Camera initialization error: {str(e)}")
             st.markdown("""
                 <div class="status error">
                     ❌ Unable to initialize camera. Please check your camera permissions and try again.
