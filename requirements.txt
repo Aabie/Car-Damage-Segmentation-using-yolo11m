@@ -1,10 +1,7 @@
 ultralytics
+opencv-python-headless
 numpy
 pillow
 requests
-Python-IO
-python-time
 streamlit
 streamlit_webrtc
-av
-opencv-python-headless
