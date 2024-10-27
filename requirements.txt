@@ -1,4 +1,4 @@
-opencv-python-headless
+opencv-python
 ultralytics
 numpy
 pillow
