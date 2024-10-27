@@ -356,35 +356,83 @@ elif option == "Live Camera":
         </div>
     """, unsafe_allow_html=True)
     
-    run = st.checkbox('▶️ Activate Camera')
-    
-    # Define a video processor class to handle YOLO inference on each frame
-    class YOLOProcessor(VideoProcessorBase):
+    class VideoProcessor(VideoProcessorBase):
         def __init__(self):
+            self.model = YOLO("best.pt")
             self.confidence_threshold = confidence_threshold
-        
-        def recv(self, frame):
-            img = frame.to_ndarray(format="bgr24")
-            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            annotated_img = process_frame(img_rgb)
-            return av.VideoFrame.from_ndarray(annotated_img, format="rgb24")
 
-    # Set up webrtc_streamer with the custom YOLO processor
-    if run:
-        webrtc_streamer(
-            key="yolo-realtime",
-            video_processor_factory=YOLOProcessor,
-            rtc_configuration=RTCConfiguration(
-                {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-            ),
-            media_stream_constraints={"video": True, "audio": False},
-        )
-    else:
-        st.markdown("""
-            <div class="status">
-                ℹ️ Click the checkbox above to begin real-time detection
-            </div>
-        """, unsafe_allow_html=True)
+        def recv(self, frame):
+            try:
+                img = frame.to_ndarray(format="bgr24")
+                
+                # Convert BGR to RGB
+                img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                
+                # Run YOLO prediction
+                results = self.model.predict(
+                    source=img_rgb,
+                    conf=self.confidence_threshold,
+                    show_boxes=False
+                )
+                
+                # Get the annotated frame
+                for result in results:
+                    annotated_frame = result.plot()
+                
+                # Convert back to BGR for display
+                annotated_frame_bgr = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
+                
+                return av.VideoFrame.from_ndarray(annotated_frame_bgr, format="bgr24")
+            
+            except Exception as e:
+                st.error(f"Error processing frame: {str(e)}")
+                return frame
+
+    # WebRTC configuration
+    rtc_config = RTCConfiguration(
+        {"iceServers": [
+            {"urls": ["stun:stun.l.google.com:19302"]},
+            {"urls": ["stun:stun1.l.google.com:19302"]},
+            {"urls": ["stun:stun2.l.google.com:19302"]}
+        ]}
+    )
+
+    # Create a container for the video stream
+    stream_container = st.container()
+    
+    with stream_container:
+        try:
+            webrtc_ctx = webrtc_streamer(
+                key="damage-detection",
+                video_processor_factory=VideoProcessor,
+                rtc_configuration=rtc_config,
+                media_stream_constraints={
+                    "video": {"width": 640, "height": 480},
+                    "audio": False
+                },
+                async_processing=True
+            )
+
+            if webrtc_ctx.state.playing:
+                st.markdown("""
+                    <div class="status success">
+                        ✨ Camera is active! Point your camera at the vehicle to detect damage.
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                    <div class="status">
+                        ℹ️ Click 'START' to begin real-time detection
+                    </div>
+                """, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error(f"Error initializing camera: {str(e)}")
+            st.markdown("""
+                <div class="status error">
+                    ❌ Unable to initialize camera. Please check your camera permissions and try again.
+                </div>
+            """, unsafe_allow_html=True)
 
 # Enhanced Footer
 st.markdown("""
