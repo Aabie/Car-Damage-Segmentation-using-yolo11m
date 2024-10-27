@@ -6,3 +6,4 @@ requests
 Python-IO
 python-time
 streamlit
+streamlit_webrtc
