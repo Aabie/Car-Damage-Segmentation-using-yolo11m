@@ -184,29 +184,26 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Detection Settings expander
-with st.session_state.expander_open:
-    with st.expander("⚙️ Detection Settings", expanded=True):
-        confidence_threshold = st.slider(
-            "Detection Confidence Threshold",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.2,
-            step=0.01,
-            format="%.2f"
-        )
-        
-        st.markdown("""
-            <div style='border: 1px solid #cccccc; border-radius: 8px; padding: 10px;'>
-                <h4 style='color: white; margin-bottom: 1rem;'>💡 Pro Tips</h4>
-                <ul style='color: white;'>
-                    <li>Higher Confidence Threshold = More precise detection (but harder to detect)</li>
-                    <li>Ensure good lighting conditions</li>
-                    <li>Keep camera steady for best results</li>
-                </ul>
-            </div>
-        """, unsafe_allow_html=True)
-
+with st.expander("⚙️ Detection Settings", expanded=True):
+    confidence_threshold = st.slider(
+        "Detection Confidnece Threshold",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.2,
+        step=0.01,
+        format="%.2f"
+    )
+    
+    st.markdown("""
+        <div style='border: 1px solid #cccccc; border-radius: 8px; padding: 10px;'>
+            <h4 style='color: white; margin-bottom: 1rem;'>💡 Pro Tips</h4>
+            <ul style='color: white;'>
+                <li>Higher Confidnece Threshold, = More precise detection (but harder to detect)</li>
+                <li>Ensure good lighting conditions</li>
+                <li>Keep camera steady for best results</li>
+            </ul>
+        </div>
+    """, unsafe_allow_html=True)
 
 # Create tabs for different input methods
 tab1, tab2, tab3 = st.tabs(["📤 Upload Image", "📷 Camera", "🔗 Image Link"])
