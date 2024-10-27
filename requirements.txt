@@ -1,0 +1,8 @@
+cv2
+ultralytics
+numpy
+PIL
+requests
+io
+os
+time
