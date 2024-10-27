@@ -1,9 +1,9 @@
 opencv-python
 ultralytics
 numpy
-PIL
+pillow
 requests
-io
-os
-time
+Python-IO
+os-sy
+python-time
 streamlit
