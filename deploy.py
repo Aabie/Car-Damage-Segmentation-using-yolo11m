@@ -9,7 +9,7 @@ import os
 import time
 
 # Load YOLO model
-model = YOLO(r"E:\abie\Coding\Project\Car Damage Segmentation\runs\segment\Results Medium\weights\best.pt")
+model = YOLO(r"best.pt")
 
 # Enhanced Modern CSS
 st.markdown("""
