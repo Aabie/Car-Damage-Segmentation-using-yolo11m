@@ -6,3 +6,4 @@ requests
 io
 os
 time
+streamlit
