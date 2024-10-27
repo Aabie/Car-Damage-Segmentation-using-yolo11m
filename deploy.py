@@ -1,6 +1,6 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import cv2
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 from ultralytics import YOLO
 import numpy as np
 from PIL import Image
