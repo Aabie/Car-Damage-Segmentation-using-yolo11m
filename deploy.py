@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import cv2
 from ultralytics import YOLO
 import numpy as np
@@ -7,6 +8,7 @@ import requests
 from io import BytesIO
 import os
 import time
+import av
 
 # Load YOLO model
 model = YOLO(r"best.pt")
@@ -237,6 +239,19 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
+RTC_CONFIGURATION = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
+
+class VideoProcessor(VideoProcessorBase):
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
+        # Apply your detection processing
+        annotated_frame = process_frame(img_rgb)
+        
+        # Convert back to BGR for display in webrtc_streamer
+        return av.VideoFrame.from_ndarray(cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR), format="bgr24")
+
 # Processing functions remain the same
 def process_frame(frame):
     results = model.predict(source=frame, task="segment", stream=True, conf=confidence_threshold, show_boxes=False)
@@ -355,11 +370,8 @@ elif option == "Live Camera":
     """, unsafe_allow_html=True)
     
     run = st.checkbox('▶️ Activate Camera')
-    FRAME_WINDOW = st.image([])
-    
+
     if run:
-        cap = cv2.VideoCapture(0)
-        
         st.markdown("""
             <div class="glass-card">
                 <h4 style='color: #4158D0;'>📌 Live View</h4>
@@ -367,22 +379,13 @@ elif option == "Live Camera":
             </div>
         """, unsafe_allow_html=True)
         
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                st.markdown("""
-                    <div class="status error">
-                        ❌ Camera connection failed. Please check your device.
-                    </div>
-                """, unsafe_allow_html=True)
-                break
-            
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            annotated_frame = process_frame(frame)
-            FRAME_WINDOW.image(annotated_frame)
-            time.sleep(0.1)
+        webrtc_streamer(
+            key="live_camera",
+            video_processor_factory=VideoProcessor,
+            rtc_configuration=RTC_CONFIGURATION,
+            media_stream_constraints={"video": True, "audio": False},
+        )
         
-        cap.release()
     else:
         st.markdown("""
             <div class="status">
