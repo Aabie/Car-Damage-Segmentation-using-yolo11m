@@ -185,26 +185,36 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-with st.expander("⚙️ Detection Settings", expanded=True):
-    confidence_threshold = st.slider(
-        "Detection Confidnece Threshold",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.2,
-        step=0.01,
-        format="%.2f"
-    )
-    
-    st.markdown("""
-        <div style='border: 1px solid #cccccc; border-radius: 8px; padding: 10px;'>
-            <h4 style='color: white; margin-bottom: 1rem;'>💡 Pro Tips</h4>
-            <ul style='color: white;'>
-                <li>Higher Confidnece Threshold, = More precise detection (but harder to detect)</li>
-                <li>Ensure good lighting conditions</li>
-                <li>Keep camera steady for best results</li>
-            </ul>
-        </div>
-    """, unsafe_allow_html=True)
+# Initialize the expander state
+if 'expander_open' not in st.session_state:
+    st.session_state.expander_open = True
+
+# Button to toggle the expander state
+if st.button("Toggle Detection Settings"):
+    st.session_state.expander_open = not st.session_state.expander_open
+
+# Detection Settings expander
+if st.session_state.expander_open:
+    with st.expander("⚙️ Detection Settings", expanded=True):
+        confidence_threshold = st.slider(
+            "Detection Confidence Threshold",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.2,
+            step=0.01,
+            format="%.2f"
+        )
+        
+        st.markdown("""
+            <div style='border: 1px solid #cccccc; border-radius: 8px; padding: 10px;'>
+                <h4 style='color: white; margin-bottom: 1rem;'>💡 Pro Tips</h4>
+                <ul style='color: white;'>
+                    <li>Higher Confidence Threshold = More precise detection (but harder to detect)</li>
+                    <li>Ensure good lighting conditions</li>
+                    <li>Keep camera steady for best results</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
 
 
 # Create tabs for different input methods
