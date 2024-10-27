@@ -239,19 +239,6 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
-RTC_CONFIGURATION = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
-
-class VideoProcessor(VideoProcessorBase):
-    def recv(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        
-        # Apply your detection processing
-        annotated_frame = process_frame(img_rgb)
-        
-        # Convert back to BGR for display in webrtc_streamer
-        return av.VideoFrame.from_ndarray(cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR), format="bgr24")
-
 # Processing functions remain the same
 def process_frame(frame):
     results = model.predict(source=frame, task="segment", stream=True, conf=confidence_threshold, show_boxes=False)
@@ -360,7 +347,7 @@ elif option == "Image Link":
                 </div>
             """, unsafe_allow_html=True)
 
-# Live Camera Option
+# Live Camera Option with streamlit-webrtc
 elif option == "Live Camera":
     st.markdown("""
         <div class="glass-card">
@@ -370,22 +357,28 @@ elif option == "Live Camera":
     """, unsafe_allow_html=True)
     
     run = st.checkbox('▶️ Activate Camera')
-
-    if run:
-        st.markdown("""
-            <div class="glass-card">
-                <h4 style='color: #4158D0;'>📌 Live View</h4>
-                <p>Position your vehicle in frame for best results</p>
-            </div>
-        """, unsafe_allow_html=True)
+    
+    # Define a video processor class to handle YOLO inference on each frame
+    class YOLOProcessor(VideoProcessorBase):
+        def __init__(self):
+            self.confidence_threshold = confidence_threshold
         
+        def recv(self, frame):
+            img = frame.to_ndarray(format="bgr24")
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            annotated_img = process_frame(img_rgb)
+            return av.VideoFrame.from_ndarray(annotated_img, format="rgb24")
+
+    # Set up webrtc_streamer with the custom YOLO processor
+    if run:
         webrtc_streamer(
-            key="live_camera",
-            video_processor_factory=VideoProcessor,
-            rtc_configuration=RTC_CONFIGURATION,
+            key="yolo-realtime",
+            video_processor_factory=YOLOProcessor,
+            rtc_configuration=RTCConfiguration(
+                {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+            ),
             media_stream_constraints={"video": True, "audio": False},
         )
-        
     else:
         st.markdown("""
             <div class="status">
