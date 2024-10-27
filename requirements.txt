@@ -4,6 +4,5 @@ numpy
 pillow
 requests
 Python-IO
-os-sy
 python-time
 streamlit
