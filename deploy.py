@@ -184,17 +184,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-# Initialize the expander state
-if 'expander_open' not in st.session_state:
-    st.session_state.expander_open = True
-
-# Button to toggle the expander state
-if st.button("Toggle Detection Settings"):
-    st.session_state.expander_open = not st.session_state.expander_open
-
 # Detection Settings expander
-if st.session_state.expander_open:
+with st.session_state.expander_open:
     with st.expander("⚙️ Detection Settings", expanded=True):
         confidence_threshold = st.slider(
             "Detection Confidence Threshold",
