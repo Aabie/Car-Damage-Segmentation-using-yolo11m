@@ -1,5 +1,4 @@
 ultralytics
-opencv-contrib-python-headless
 opencv-python-headless
 numpy
 pillow
